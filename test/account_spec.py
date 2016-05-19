@@ -5,47 +5,50 @@ from doublex_expects import *
 
 class MemoryRepository:
     def __init__(self):
-        self.value = 0
+        self.values = {}
 
-    def get(self):
-        return self.value
+    def get(self, id):
+        return self.values.get(id, 0)
 
-    def set(self, value):
-        self.value = value
+    def set(self, id, value):
+        self.values[id] = value
 
 
 class Account:
-    def __init__(self, repository):
+    def __init__(self, id, repository):
+        self.id = id
         self.repository = repository
 
     def deposit(self, amount):
         if amount <= 0:
             raise Exception("Invalid amount")
-        value = self.repository.get()
-        self.repository.set(value + amount)
+        value = self.repository.get(self.id)
+        self.repository.set(self.id, value + amount)
 
     def withdraw(self, amount):
         if amount <= 0:
             raise Exception("Invalid amount")
-        value = self.repository.get()
+        value = self.repository.get(self.id)
         if value - amount < 0:
             raise Exception("Not enough balance")
-        self.repository.set(value - amount)
+        self.repository.set(self.id, value - amount)
 
     @property
     def balance(self):
-        return self.repository.get()
+        return self.repository.get(self.id)
+
+
 
 
 with description("Account"):
     with context('creates account'):
         with it("creates default account"):
-            account = Account(MemoryRepository())
+            account = Account('an_id', MemoryRepository())
             expect(account.balance).to(equal(0))
 
     with context("deposit operation"):
         with before.each:
-            self.account = Account(MemoryRepository())
+            self.account = Account('an_id', MemoryRepository())
 
         with it("can deposit"):
             self.account.deposit(5)
@@ -62,8 +65,8 @@ with description("Account"):
     with context("withdrawal operations"):
         with before.each:
             repository = MemoryRepository()
-            repository.set(7)
-            self.account = Account(repository)
+            repository.set('an_id', 7)
+            self.account = Account('an_id', repository)
 
         with it("can withdrawal if we have anough money"):
             self.account.withdraw(2)
@@ -78,3 +81,10 @@ with description("Account"):
 
         with it("cannot withdraw if doesn't have enough money"):
             expect(lambda: self.account.withdraw(10)).to(raise_error(Exception))
+
+
+with description("Bank"):
+    with context("Transfer"):
+        with _it("transfer 100 from one account to another"):
+            bank = Bank()
+            bank.transfer('id_account1', 'id_account2', 100)
