@@ -8,18 +8,23 @@ class Account:
         self.balance = 0
 
     def deposit(self, amount):
+        if amount < 0:
+            raise Exception("Invalid amount")
         self.balance += amount
+
 
 with description("Account"):
     with it("creates account"):
         account = Account()
         expect(account.balance).to(equal(0))
 
-    with it("can deposit"):
-        account = Account()
-        amount = 5
-        account.deposit(amount)
-        expect(account.balance).to(equal(amount))
+    with context("deposit operation"):
+        with before.all:
+            self.account = Account()
 
-    with _it("can withdawl"):
-        pass
+        with it("can deposit"):
+            self.account.deposit(5)
+            expect(self.account.balance).to(equal(5))
+
+        with it("cannot deposit negative amounts"):
+            expect(lambda: self.account.deposit(-5)).to(raise_error(Exception))
