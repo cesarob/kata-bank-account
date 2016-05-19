@@ -2,30 +2,40 @@ from doublex import *
 from expects import *
 from doublex_expects import *
 
+class MemoryRepository:
+    def __init__(self):
+        self.value = 0
+
+    def get(self):
+        return self.value
+
+    def set(self, value):
+        self.value = value
 
 class Account:
-    def __init__(self):
-        self._balance = 0
+    def __init__(self, repository):
+        self.repository = repository
 
     def deposit(self, amount):
         if amount <= 0:
             raise Exception("Invalid amount")
-        self._balance += amount
+        value = self.repository.get()
+        self.repository.set(value + amount)
 
     @property
     def balance(self):
-        return self._balance
+        return self.repository.get()
 
 
 with description("Account"):
     with context('creates account'):
         with it("creates default account"):
-            account = Account()
+            account = Account(MemoryRepository())
             expect(account.balance).to(equal(0))
 
     with context("deposit operation"):
         with before.each:
-            self.account = Account()
+            self.account = Account(MemoryRepository())
 
         with it("can deposit"):
             self.account.deposit(5)
@@ -41,4 +51,4 @@ with description("Account"):
 
     with context("withdrawal operations"):
         with before.each:
-            self.account = Account(5)
+            self.account = Account(MemoryRepository())
