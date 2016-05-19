@@ -5,26 +5,40 @@ from doublex_expects import *
 
 class Account:
     def __init__(self):
-        self.balance = 0
+        self._balance = 0
 
     def deposit(self, amount):
-        if amount < 0:
+        if amount <= 0:
             raise Exception("Invalid amount")
-        self.balance += amount
+        self._balance += amount
+
+    @property
+    def balance(self):
+        return self._balance
 
 
 with description("Account"):
-    with it("creates account"):
-        account = Account()
-        expect(account.balance).to(equal(0))
+    with context('creates account'):
+        with it("creates default account"):
+            account = Account()
+            expect(account.balance).to(equal(0))
 
     with context("deposit operation"):
-        with before.all:
+        with before.each:
             self.account = Account()
 
         with it("can deposit"):
             self.account.deposit(5)
-            expect(self.account.balance).to(equal(5))
+            self.account.deposit(2)
+
+            expect(self.account.balance).to(equal(7))
 
         with it("cannot deposit negative amounts"):
             expect(lambda: self.account.deposit(-5)).to(raise_error(Exception))
+
+        with it("cannot deposit 0 as amount"):
+            expect(lambda: self.account.deposit(0)).to(raise_error(Exception))
+
+    with context("withdrawal operations"):
+        with before.each:
+            self.account = Account(5)
